@@ -11,6 +11,7 @@ coverage/
 # Node.js
 node_modules
 *.log
+build/
 
 decoders/cpp/usage*
 !decoders/cpp/usage*.*
