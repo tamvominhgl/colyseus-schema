@@ -133,6 +133,11 @@ function inspectNode(node: ts.Node, context: Context, decoratorName: string) {
                     const typeArgument = typeDecorator.arguments[0];
                     defineProperty(property, typeArgument);
 
+                    const typeName = prop.type && prop.type.typeName && prop.type.typeName.escapedText;
+                    if (typeName && typeName.endsWith('Enum')) {
+                        property.enumType = typeName;
+                    }
+
                 } else if (
                     prop.expression.arguments?.[1] &&
                     prop.expression.expression.arguments?.[0]

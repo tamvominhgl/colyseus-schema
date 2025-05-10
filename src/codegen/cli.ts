@@ -3,6 +3,7 @@ import { generate } from "./api";
 
 const supportedTargets = {
     csharp: 'generate for C#/Unity',
+    csharpCustomized: 'generate for C#/Unity (customized)',
     cpp: 'generate for C++',
     haxe: 'generate for Haxe',
     ts: 'generate for TypeScript',

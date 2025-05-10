@@ -56,19 +56,18 @@ export function generate(context: Context, options: GenerateOptions): File[] {
 
 function generateClass(klass: Class, namespace: string) {
     const indent = (namespace) ? "\t" : "";
+    const extend = `${klass.extends}` === 'Schema' ? '' : `: ${klass.extends} `;
     return `${getCommentHeader()}
 
-using Colyseus.Schema;
 #if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
 #endif
 ${namespace ? `\nnamespace ${namespace} {` : ""}
-${indent}public partial class ${klass.name} : ${klass.extends} {
+${indent}public partial class ${klass.name} ${extend}{
 ${indent}\t#if UNITY_5_3_OR_NEWER
 ${indent}\t[Preserve]
 ${indent}\t#endif
-${indent}\tpublic ${klass.name}() { }
-
+${indent}\tpublic ${klass.name}() {}
 ${klass.properties.map((prop) => generateProperty(prop, indent)).join("\n\n")}
 ${indent}}
 ${namespace ? "}" : ""}
@@ -77,34 +76,6 @@ ${namespace ? "}" : ""}
 
 function generateEnum(_enum: Enum, namespace: string) {
     const indent = namespace ? "\t" : "";
-    if (_enum.name.endsWith('Enum')) {
-    return `${getCommentHeader()}
-${namespace ? `\nnamespace ${namespace} {` : ""}
-${indent}public enum ${_enum.name} : int {
-
-${_enum.properties
-    .map((prop) => {
-        let dataType: string = "int";
-        let value: any;
-
-        if(prop.type) {
-            if(isNaN(Number(prop.type))) {
-                value = `"${prop.type}"`;
-                dataType = "string";
-            } else {
-                value = Number(prop.type);
-                dataType = Number.isInteger(value)? 'int': 'float';
-            }
-        } else {
-            value = _enum.properties.indexOf(prop);
-        }
-        return `${indent}\t${prop.name} = ${value},`;
-    })
-        .join("\n")}
-${indent}}
-${namespace ? "}" : ""}`
-    }
-
     return `${getCommentHeader()}
 ${namespace ? `\nnamespace ${namespace} {` : ""}
 ${indent}public struct ${_enum.name} {
@@ -150,30 +121,29 @@ function generateProperty(prop: Property, indent: string = "") {
 
         initializer = `null`;
 
+        if (langType.startsWith('ArraySchema<')) {
+            langType = `${typeMaps[prop.childType] || prop.childType}[]`;
+            initializer = `{}`;
+        }
+
     } else {
         langType = getType(prop);
-        initializer = `default(${langType})`;
+        initializer = `default`;
     }
 
     property += ` ${langType} ${prop.name}`;
 
     let ret = (prop.deprecated) ? `\t\t[System.Obsolete("field '${prop.name}' is deprecated.", true)]\n` : '';
 
-    return ret + `\t${indent}[Type(${prop.index}, ${typeArgs})]
-\t${indent}${property} = ${initializer};`;
+    return ret + `\t${indent}${property} = ${initializer};`;
 }
 
 function generateInterface(struct: Interface, namespace: string) {
     const indent = (namespace) ? "\t" : "";
     return `${getCommentHeader()}
 
-#if UNITY_5_3_OR_NEWER
-using UnityEngine.Scripting;
-#endif
+using Colyseus.Schema;
 ${namespace ? `\nnamespace ${namespace} {` : ""}
-${indent}#if UNITY_5_3_OR_NEWER
-${indent}[Preserve]
-${indent}#endif
 ${indent}public class ${struct.name} {
 ${struct.properties.map(prop => `\t${indent}public ${getType(prop)} ${prop.name};`).join("\n")}
 ${indent}}
@@ -186,9 +156,7 @@ function getChildType(prop: Property) {
 }
 
 function getType(prop: Property) {
-    if (prop.enumType) {
-        return prop.enumType;
-    } else if (prop.childType) {
+    if (prop.childType) {
         const isUpcaseFirst = prop.childType.match(/^[A-Z]/);
         let type: string;
 

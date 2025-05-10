@@ -31,6 +31,9 @@ export class Context {
                         }
                     }
                 }
+                if (klass.name.endsWith('Message')) {
+                    this.interfaces.push(klass);
+                }
                 return false;
             }),
             interfaces: this.interfaces,
@@ -154,6 +157,7 @@ export class Property {
     type: string;
     childType: string;
     deprecated?: boolean;
+    enumType?: string;
 }
 
 export interface File {
