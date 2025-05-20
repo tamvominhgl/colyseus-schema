@@ -124,7 +124,7 @@ function inspectNode(node: ts.Node, context: Context, decoratorName: string) {
                      */
                     const typeDecorator: any = propDecorator.find((decorator => {
                         return (decorator.expression as any).expression.escapedText === decoratorName;
-                    })).expression;
+                    }));
                     if (!typeDecorator) {
                         break;
                     }
