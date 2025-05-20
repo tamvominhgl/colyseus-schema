@@ -186,6 +186,82 @@ describe("ArraySchema Tests", () => {
             assertDeepStrictEqualEncodeAll(state);
         });
 
+        it("2: shift + repopulate should not trigger refId not found", () => {
+            const Entity = schema({
+                i: "number"
+            });
+            const MyState = schema({
+                entities: [Entity]
+            });
+
+            const state = new MyState();
+            state.entities = [];
+
+            const populate = (count: number) => {
+                for (let i = 0; i < count; i++) {
+                    const ent = new Entity();
+                    ent.i = i;
+                    state.entities.push(ent);
+                }
+            }
+            populate(100);
+
+            // Define the sequence of lengths and their corresponding encode actions
+            const encodeActions = [
+                { length: 100, action: "FULL!" },
+                { length: 95, action: "PATCH!" },
+                { length: 89, action: "PATCH!" },
+                { length: 83, action: "FULL!" },
+                { length: 83, action: "PATCH!" },
+                { length: 77, action: "PATCH!" },
+                { length: 71, action: "PATCH!" },
+                { length: 66, action: "FULL!" },
+                { length: 65, action: "PATCH!" },
+                { length: 59, action: "PATCH!" },
+                { length: 53, action: "PATCH!" },
+                { length: 46, action: "PATCH!" },
+                { length: 46, action: "FULL!" },
+                { length: 41, action: "PATCH!" },
+                { length: 35, action: "PATCH!" }
+            ];
+
+            let actionIndex = 0;
+            let newClient = createInstanceFromReflection(state); // Initial client
+            newClient.decode(state.encodeAll()); // Initial FULL! decode
+
+            for (let i = 0; i < 100; i++) {
+                state.entities.forEach((entity) => entity.i++);
+                state.entities.shift();
+
+                // Check if the current length matches the next action in the sequence
+                if (actionIndex < encodeActions.length && state.entities.length === encodeActions[actionIndex].length) {
+                    if (encodeActions[actionIndex].action === "FULL!") {
+                        newClient = createInstanceFromReflection(state); // New client for FULL!
+                        newClient.decode(state.encodeAll());
+                    } else if (encodeActions[actionIndex].action === "PATCH!") {
+                        newClient.decode(state.encode()); // Use existing client for PATCH!
+                    }
+                    actionIndex++;
+                }
+
+                if (state.entities.length === 0) {
+                    populate(100);
+                    // After repopulating, check if the new length matches an action
+                    if (actionIndex < encodeActions.length && state.entities.length === encodeActions[actionIndex].length) {
+                        if (encodeActions[actionIndex].action === "FULL!") {
+                            newClient = createInstanceFromReflection(state); // New client for FULL!
+                            newClient.decode(state.encodeAll());
+                        } else if (encodeActions[actionIndex].action === "PATCH!") {
+                            newClient.decode(state.encode()); // Use existing client for PATCH!
+                        }
+                        actionIndex++;
+                    }
+                }
+            }
+
+            assertDeepStrictEqualEncodeAll(state);
+        });
+
         it("mutate previous instance + shift", () => {
             /**
              * This test shows that flagging the `changeSet` item as `undefined`
@@ -224,6 +300,55 @@ describe("ArraySchema Tests", () => {
             assertRefIdCounts(state, decodedState);
 
             state.entities.shift();
+            assertDeepStrictEqualEncodeAll(state);
+        });
+
+        xit("encodeAll() + with enqueued encode() shifts", () => {
+            class Entity extends Schema {
+                @type("number") thing: number;
+            }
+            class State extends Schema {
+                @type([Entity]) entities: Entity[];
+            }
+
+            const state = new State();
+            state.entities = [];
+
+            const repopulateEntitiesArray = (count) => {
+                for (let i = 0; i < count; i++) {
+                    const ent = new Entity();
+                    ent.thing = i;
+                    state.entities.push(ent);
+                }
+            };
+            repopulateEntitiesArray(35);
+
+            function mutateAllAndShift(count: number = 6) {
+                for (let i = 0; i < count; i++) {
+                    state.entities.forEach((entity) => entity.thing++);
+                    state.entities.shift();
+                }
+            }
+
+            const decoded1 = createInstanceFromReflection(state);
+            decoded1.decode(state.encodeAll());
+            mutateAllAndShift(6);
+            decoded1.decode(state.encode());
+            mutateAllAndShift(6);
+            decoded1.decode(state.encode());
+
+            mutateAllAndShift(9);
+
+            const decoded2 = createInstanceFromReflection(state);
+            console.log("\n\n\n\nDECODE FULL!");
+            decoded2.decode(state.encodeAll());
+            console.log("FULL REFS:", getDecoder(decoded2).root.refs.size, '=>', Array.from(getDecoder(decoded2).root.refs.keys()));
+            mutateAllAndShift(3);
+            decoded2.decode(state.encode());
+            console.log("PATCH REFS:", getDecoder(decoded2).root.refs.size, '=>', Array.from(getDecoder(decoded2).root.refs.keys()));
+            mutateAllAndShift(6);
+            decoded2.decode(state.encode());
+
             assertDeepStrictEqualEncodeAll(state);
         });
     });
@@ -356,6 +481,14 @@ describe("ArraySchema Tests", () => {
         assert.strictEqual(6, onChangeCount);
         assert.deepStrictEqual(["B", "C", "D", "E"], decodedState.items.map(it => it.name))
         assert.strictEqual("A", removedItem.name);
+
+        state.items.splice(2, 1, new Item().assign({ name: "F" }));
+        decodedState.decode(state.encode());
+
+        assert.strictEqual(2, onRemoveCount);
+        assert.strictEqual("D", removedItem.name);
+        assert.strictEqual(7, onChangeCount);
+        assert.deepStrictEqual(["B", "C", "F", "E"], decodedState.items.map(it => it.name))
 
         assertDeepStrictEqualEncodeAll(state);
     });
