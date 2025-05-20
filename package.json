@@ -1,10 +1,10 @@
 {
   "name": "@tamgl/colyseus-schema",
-  "version": "3.0.38",
+  "version": "3.0.39",
   "description": "Binary state serializer with delta encoding for games",
   "bin": {
-    "tamgl-codegen": "bin/schema-codegen",
-    "tamgl-debug": "bin/schema-debug"
+    "tamgl-codegen": "bin/tamgl-codegen",
+    "tamgl-debug": "bin/tamgl-debug"
   },
   "scripts": {
     "build": "tsc && rollup -c rollup.config.mjs",
