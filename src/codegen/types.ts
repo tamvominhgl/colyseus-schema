@@ -1,6 +1,6 @@
 import * as fs from "fs";
 
-const VERSION = JSON.parse(fs.readFileSync(__dirname + "/../../package.json").toString()).version;
+const VERSION = JSON.parse(fs.readFileSync(__dirname + "/../../package.json").toString()).upstream;
 const COMMENT_HEADER = `
 THIS FILE HAS BEEN GENERATED AUTOMATICALLY
 DO NOT CHANGE IT MANUALLY UNLESS YOU KNOW WHAT YOU'RE DOING
