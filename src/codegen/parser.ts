@@ -125,12 +125,16 @@ function inspectNode(node: ts.Node, context: Context, decoratorName: string) {
                     const typeDecorator: any = propDecorator.find((decorator => {
                         return (decorator.expression as any).expression.escapedText === decoratorName;
                     })).expression;
+                    if (!typeDecorator) {
+                        break;
+                    }
+                    const typeExpression = typeDecorator.expression;
 
                     const property = currentProperty || new Property();
                     property.name = prop.name.escapedText;
                     currentStructure.addProperty(property);
 
-                    const typeArgument = typeDecorator.arguments[0];
+                    const typeArgument = typeExpression.arguments[0];
                     defineProperty(property, typeArgument);
 
                     const typeName = prop.type && prop.type.typeName && prop.type.typeName.escapedText;
