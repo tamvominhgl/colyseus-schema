@@ -148,11 +148,11 @@ function generateProperty(prop: Property, indent: string = "") {
             typeArgs += `, "${prop.childType}"`;
         }
 
-        initializer = `null`;
+        initializer = `new()`;
 
     } else {
         langType = getType(prop);
-        initializer = `default(${langType})`;
+        initializer = `default`;
     }
 
     property += ` ${langType} ${prop.name}`;
@@ -167,11 +167,15 @@ function generateInterface(struct: Interface, namespace: string) {
     const indent = (namespace) ? "\t" : "";
     return `${getCommentHeader()}
 
-#if UNITY_5_3_OR_NEWER
+#if USE_MESSAGEPACK_CSHARP
+using MessagePack;
+#else
 using UnityEngine.Scripting;
 #endif
 ${namespace ? `\nnamespace ${namespace} {` : ""}
-${indent}#if UNITY_5_3_OR_NEWER
+${indent}#if USE_MESSAGEPACK_CSHARP
+${indent}[MessagePackObject(keyAsPropertyName: true)]
+${indent}#else
 ${indent}[Preserve]
 ${indent}#endif
 ${indent}public class ${struct.name} {
