@@ -237,6 +237,9 @@ export class StateView {
                 // DELETE / DELETE BY REF ID
                 changes[changeTree.parentIndex] = OPERATION.DELETE;
 
+                // Remove child schema from visible set
+                this._recursiveDeleteVisibleChangeTree(changeTree);
+
             } else {
                 // delete all "tagged" properties.
                 metadata?.[$viewFieldIndexes]?.forEach((index) =>
@@ -313,5 +316,12 @@ export class StateView {
         }
 
         return isVisible;
+    }
+
+    protected _recursiveDeleteVisibleChangeTree(changeTree: ChangeTree) {
+        changeTree.forEachChild((childChangeTree) => {
+            this.visible.delete(childChangeTree);
+            this._recursiveDeleteVisibleChangeTree(childChangeTree);
+        });
     }
 }
