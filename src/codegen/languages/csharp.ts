@@ -179,10 +179,20 @@ ${indent}#else
 ${indent}[Preserve]
 ${indent}#endif
 ${indent}public class ${struct.name} {
-${struct.properties.map(prop => `\t${indent}public ${getType(prop)} ${prop.name};`).join("\n")}
+${struct.properties.map(prop => `\t${indent}public ${getTypeForInterface(prop)} ${prop.name};`).join("\n")}
 ${indent}}
 ${namespace ? "}" : ""}
 `;
+}
+
+function getTypeForInterface(prop: Property) {
+    let langType = getType(prop);
+
+    if (langType.startsWith('ArraySchema<')) {
+        langType = `${typeMaps[prop.childType] || prop.childType}[]`;
+    }
+
+    return langType;
 }
 
 function getChildType(prop: Property) {
