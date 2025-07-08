@@ -1,7 +1,7 @@
 {
   "name": "@tamgl/colyseus-schema",
   "version": "3.0.42",
-  "upstream": "3.0.39",
+  "upstream": "3.0.42",
   "description": "Binary state serializer with delta encoding for games",
   "bin": {
     "tamgl-codegen": "bin/schema-codegen",
