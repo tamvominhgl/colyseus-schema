@@ -9,6 +9,7 @@ export interface GenerateOptions {
     output: string;
     decorator?: string;
     namespace?: string;
+    using?: string;
 }
 
 export function generate(targetId: string, options: GenerateOptions) {

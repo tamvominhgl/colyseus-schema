@@ -45,7 +45,7 @@ export function generate(context: Context, options: GenerateOptions): File[] {
         })),
         ...context.interfaces.map(structure => ({
             name: `${structure.name}.cs`,
-            content: generateInterface(structure, options.namespace),
+            content: generateInterface(structure, options.namespace, options.using),
         })),
         ...context.enums.filter(structure => structure.name !== 'OPERATION').map((structure) => ({
             name: `${structure.name}.cs`,
@@ -159,11 +159,12 @@ function generateProperty(prop: Property, indent: string = "") {
 \t${indent}${property} = ${initializer};`;
 }
 
-function generateInterface(struct: Interface, namespace: string) {
+function generateInterface(struct: Interface, namespace: string, using: string) {
     const indent = (namespace) ? "\t" : "";
     return `${getCommentHeader()}
 
 using MessagePack;
+${using ? `using ${using};` : ""}
 ${namespace ? `\nnamespace ${namespace} {` : ""}
 ${indent}[MessagePackObject(keyAsPropertyName: true)]
 ${indent}public class ${struct.name} {

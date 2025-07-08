@@ -16,7 +16,7 @@ function displayHelp() {
     console.log(`\nschema-codegen [path/to/Schema.ts]
 
 Usage (C#/Unity)
-    schema-codegen src/Schema.ts --output client-side/ --csharp --namespace MyGame.Schema
+    schema-codegen src/Schema.ts --output client-side/ --csharp --namespace MyGame.Schema --using MyGame.Namespace
 
 Valid options:
     --output: the output directory for generated client-side schema files
@@ -56,7 +56,8 @@ try {
         files: args._,
         decorator: args.decorator,
         output: args.output,
-        namespace: args.namespace
+        namespace: args.namespace,
+        using: args.using,
     });
 
 } catch (e) {
