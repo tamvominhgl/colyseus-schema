@@ -59,14 +59,10 @@ function generateClass(klass: Class, namespace: string) {
     return `${getCommentHeader()}
 
 using Colyseus.Schema;
-#if UNITY_5_3_OR_NEWER
 using UnityEngine.Scripting;
-#endif
 ${namespace ? `\nnamespace ${namespace} {` : ""}
 ${indent}public partial class ${klass.name} : ${klass.extends} {
-${indent}\t#if UNITY_5_3_OR_NEWER
 ${indent}\t[Preserve]
-${indent}\t#endif
 ${indent}\tpublic ${klass.name}() { }
 
 ${klass.properties.map((prop) => generateProperty(prop, indent)).join("\n\n")}
@@ -167,17 +163,9 @@ function generateInterface(struct: Interface, namespace: string) {
     const indent = (namespace) ? "\t" : "";
     return `${getCommentHeader()}
 
-#if USE_MESSAGEPACK_CSHARP
 using MessagePack;
-#else
-using UnityEngine.Scripting;
-#endif
 ${namespace ? `\nnamespace ${namespace} {` : ""}
-${indent}#if USE_MESSAGEPACK_CSHARP
 ${indent}[MessagePackObject(keyAsPropertyName: true)]
-${indent}#else
-${indent}[Preserve]
-${indent}#endif
 ${indent}public class ${struct.name} {
 ${struct.properties.map(prop => `\t${indent}public ${getTypeForInterface(prop)} ${prop.name};`).join("\n")}
 ${indent}}

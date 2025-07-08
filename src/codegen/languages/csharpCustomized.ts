@@ -59,20 +59,10 @@ function generateClass(klass: Class, namespace: string) {
     const extend = `${klass.extends}` === 'Schema' ? '' : `: ${klass.extends} `;
     return `${getCommentHeader()}
 
-#if USE_MESSAGEPACK_CSHARP
 using MessagePack;
-#else
-using UnityEngine.Scripting;
-#endif
 ${namespace ? `\nnamespace ${namespace} {` : ""}
-#if USE_MESSAGEPACK_CSHARP
 ${indent}[MessagePackObject(keyAsPropertyName: true)]
-#endif
 ${indent}public partial class ${klass.name} ${extend}{
-${indent}\t#if !USE_MESSAGEPACK_CSHARP
-${indent}\t[Preserve]
-${indent}\tpublic ${klass.name}() {}
-${indent}\t#endif
 ${klass.properties.map((prop) => generateProperty(prop, indent)).join("\n")}
 ${indent}}
 ${namespace ? "}" : ""}
